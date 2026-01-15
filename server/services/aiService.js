@@ -186,7 +186,7 @@ Respond by:
 
     detectAnomalies: async (log) => {
         const isHighLatency = log.latencyMs > 2000;
-        const isServerError = log.status >= 500;
+        const isServerError = log.status >= 400;
 
         if (isHighLatency || isServerError) {
             const type = isHighLatency ? 'latency' : 'error';
@@ -202,7 +202,7 @@ Respond by:
                 description,
                 affectedEndpoint: 'httpbin.org/anything',
                 detectedValue: isHighLatency ? log.latencyMs : log.status,
-                threshold: isHighLatency ? '> 2000ms' : '>= 500',
+                threshold: isHighLatency ? '> 2000ms' : '>= 400',
                 status: 'open'
             });
 

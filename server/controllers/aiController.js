@@ -19,7 +19,7 @@ const aiController = {
     // Get Incidents
     getIncidents: async (req, res) => {
         try {
-            const incidents = await Incident.find().sort({ timestamp: -1 }).limit(50);
+            const incidents = await Incident.find().sort({ timestamp: -1 });
             res.json(incidents);
         } catch (err) {
             res.status(500).json({ error: 'Failed to fetch incidents' });
