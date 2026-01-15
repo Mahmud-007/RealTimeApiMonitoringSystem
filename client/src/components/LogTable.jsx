@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { Eye, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Eye, Clock, CheckCircle, XCircle, ChevronRight } from 'lucide-react';
 
 const LogTable = ({ logs, onViewDetails }) => {
   return (
@@ -11,20 +11,23 @@ const LogTable = ({ logs, onViewDetails }) => {
               <th className="px-6 py-4 font-semibold text-gray-700">Status</th>
               <th className="px-6 py-4 font-semibold text-gray-700">Timestamp</th>
               <th className="px-6 py-4 font-semibold text-gray-700">Event Type</th>
-              <th className="px-6 py-4 font-semibold text-gray-700">Latency</th>
-              <th className="px-6 py-4 font-semibold text-gray-700 text-right">Actions</th>
+              <th className="px-6 py-4 font-semibold text-gray-700 text-right">Latency</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {logs.length === 0 ? (
                 <tr>
-                    <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan="4" className="px-6 py-8 text-center text-gray-500">
                         No logs found. Waiting for events...
                     </td>
                 </tr>
             ) : (
                 logs.map((log) => (
-                    <tr key={log._id || log.requestPayload.eventId} className="hover:bg-gray-50 transition-colors animate-fade-in-down">
+                    <tr 
+                        key={log._id || log.requestPayload.eventId} 
+                        onClick={() => onViewDetails(log)}
+                        className="hover:bg-indigo-50/50 cursor-pointer transition-colors animate-fade-in-down group"
+                    >
                         <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                             {log.status >= 200 && log.status < 300 ? (
@@ -45,20 +48,14 @@ const LogTable = ({ logs, onViewDetails }) => {
                             {log.requestPayload?.type || 'Unknown'}
                         </span>
                         </td>
-                        <td className="px-6 py-4 text-gray-600 font-mono text-xs">
-                        <div className="flex items-center gap-1.5">
-                            <Clock size={14} className="text-gray-400" />
-                            {log.latencyMs}ms
+                        <td className="px-6 py-4 text-gray-600 font-mono text-xs text-right">
+                        <div className="flex items-center justify-end gap-2">
+                            <div className="flex items-center gap-1.5">
+                                <Clock size={14} className="text-gray-400" />
+                                {log.latencyMs}ms
+                            </div>
+                            <ChevronRight size={16} className="text-gray-300 group-hover:text-indigo-500 transition-colors" />
                         </div>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                        <button 
-                            onClick={() => onViewDetails(log)}
-                            className="text-gray-400 hover:text-indigo-600 transition-colors"
-                            title="View Details"
-                        >
-                            <Eye size={18} />
-                        </button>
                         </td>
                     </tr>
                 ))

@@ -27,12 +27,52 @@ startMonitoring();
 // API Endpoints
 
 // Get Historical Logs
+// Get Historical Logs with Pagination and Filtering
 app.get('/api/logs', async (req, res) => {
     try {
+        const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 50;
-        const logs = await Log.find().sort({ timestamp: -1 }).limit(limit);
-        res.json(logs);
+        const skip = (page - 1) * limit;
+
+        const { startDate, endDate, status } = req.query;
+        let query = {};
+
+        // Date Filtering
+        if (startDate || endDate) {
+            query.timestamp = {};
+            if (startDate) query.timestamp.$gte = new Date(startDate);
+            if (endDate) query.timestamp.$lte = new Date(endDate);
+        }
+
+        // Status Filtering (e.g., status=200 or status=error for >= 400)
+        if (status) {
+            if (status === 'error') {
+                query.status = { $gte: 400 };
+            } else if (status === 'success') {
+                query.status = { $lt: 400 };
+            } else {
+                query.status = parseInt(status);
+            }
+        }
+
+        const logs = await Log.find(query)
+            .sort({ timestamp: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        const total = await Log.countDocuments(query);
+
+        res.json({
+            data: logs,
+            pagination: {
+                total,
+                page,
+                limit,
+                pages: Math.ceil(total / limit)
+            }
+        });
     } catch (err) {
+        console.error('Error fetching logs:', err);
         res.status(500).json({ error: 'Failed to fetch logs' });
     }
 });

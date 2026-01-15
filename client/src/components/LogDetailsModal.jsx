@@ -14,10 +14,10 @@ const LogDetailsModal = ({ log, onClose }) => {
         </div>
         
         <div className="p-6 overflow-auto">
-          <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
             <div className="bg-gray-50 p-3 rounded">
               <span className="text-xs text-gray-500 uppercase font-bold">Event ID</span>
-              <div className="font-mono text-sm">{log.requestPayload?.eventId}</div>
+              <div className="font-mono text-sm break-all">{log.requestPayload?.eventId}</div>
             </div>
             <div className={`p-3 rounded ${log.status >= 200 && log.status < 300 ? 'bg-green-50' : 'bg-red-50'}`}>
               <span className="text-xs text-gray-500 uppercase font-bold">Status</span>

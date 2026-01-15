@@ -6,7 +6,13 @@ import SystemInsights from './SystemInsights';
 import { Activity, Radio } from 'lucide-react';
 
 const Dashboard = () => {
-  const { logs, connectionStatus } = useRealTimeLogs();
+  const [filters, setFilters] = useState({
+    startDate: '',
+    endDate: '',
+    status: ''
+  });
+  
+  const { logs, connectionStatus } = useRealTimeLogs(filters);
   const [selectedLog, setSelectedLog] = useState(null);
 
   // Close modal on escape
@@ -18,12 +24,16 @@ const Dashboard = () => {
     return () => window.removeEventListener('keydown', handleEsc);
   }, []);
 
+  const handleFilterChange = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50/50 p-6 md:p-12 font-sans text-gray-800">
+    <div className="min-h-screen bg-gray-50/50 p-4 md:p-12 font-sans text-gray-800">
       <div className="max-w-5xl mx-auto space-y-8">
         
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-indigo-600 rounded-lg shadow-lg shadow-indigo-200">
               <Activity className="text-white" size={24} />
@@ -46,9 +56,41 @@ const Dashboard = () => {
         {/* Phase 4: AI Insights Placeholder */}
         <SystemInsights />
 
-        {/* Stats Summary (Mini) */}
-        <div className="grid grid-cols-3 gap-4">
-             <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
+        {/* Filters & Stats */}
+        <div className="grid grid-cols-1 gap-4">
+            {/* Filters */}
+            <div className="md:col-span-4 bg-white p-4 rounded-lg border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 items-end">
+                <div className="w-full md:w-auto flex-1">
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Start Date</label>
+                    <input 
+                        type="datetime-local" 
+                        className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        onChange={(e) => handleFilterChange('startDate', e.target.value)}
+                    />
+                </div>
+                <div className="w-full md:w-auto flex-1">
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">End Date</label>
+                    <input 
+                        type="datetime-local" 
+                        className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                    />
+                </div>
+                <div className="w-full md:w-auto flex-1">
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
+                    <select 
+                        className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        onChange={(e) => handleFilterChange('status', e.target.value)}
+                    >
+                        <option value="">All Statuses</option>
+                        <option value="success">Success (2xx)</option>
+                        <option value="error">Error (4xx/5xx)</option>
+                    </select>
+                </div>
+            </div>
+
+            {/* Stats */}
+            <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
                 <div className="text-gray-500 text-xs uppercase font-bold tracking-wider mb-1">Total Requests</div>
                 <div className="text-2xl font-bold text-gray-800">{logs.length}</div>
              </div>
@@ -69,8 +111,8 @@ const Dashboard = () => {
         {/* Logs Table */}
         <div>
             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-800">Latest Live Events</h3>
-                <span className="text-xs text-gray-400 font-mono">httpbin.org/anything</span>
+                <h3 className="text-lg font-bold text-gray-800">Latest Logs</h3>
+                <span className="text-xs text-gray-400 font-mono hidden md:inline">httpbin.org/anything</span>
             </div>
             <LogTable logs={logs} onViewDetails={setSelectedLog} />
         </div>
