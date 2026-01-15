@@ -105,6 +105,16 @@ app.post('/api/trigger', async (req, res) => {
     res.json({ message: 'Ping triggered' });
 });
 
+// Serve static assets in production
+const path = require('path');
+// Serve static files from the client/dist directory
+app.use(express.static(path.join(__dirname, '../client/dist')));
+
+// Handle React routing, return all requests to React app
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+});
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
