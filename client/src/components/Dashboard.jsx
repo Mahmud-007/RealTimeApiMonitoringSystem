@@ -2,17 +2,17 @@ import { useState, useEffect } from 'react';
 import useRealTimeLogs from '../hooks/useRealTimeLogs';
 import LogTable from './LogTable';
 import LogDetailsModal from './LogDetailsModal';
-import SystemInsights from './SystemInsights';
-import { Activity, Radio } from 'lucide-react';
+import { Activity, Radio, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const Dashboard = () => {
+  const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({
     startDate: '',
     endDate: '',
     status: ''
   });
   
-  const { logs, connectionStatus } = useRealTimeLogs(filters);
+  const { logs, connectionStatus, totalLogs } = useRealTimeLogs(filters, page);
   const [selectedLog, setSelectedLog] = useState(null);
 
   // Close modal on escape
@@ -26,22 +26,20 @@ const Dashboard = () => {
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
+    setPage(1); // Reset to page 1 on filter change
   };
 
+  const totalPages = Math.ceil(totalLogs / 50);
+
   return (
-    <div className="min-h-screen bg-gray-50/50 p-4 md:p-12 font-sans text-gray-800">
-      <div className="max-w-5xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gray-50/50 p-4 md:p-8 font-sans text-gray-800">
+      <div className="max-w-7xl mx-auto space-y-8">
         
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-indigo-600 rounded-lg shadow-lg shadow-indigo-200">
-              <Activity className="text-white" size={24} />
-            </div>
-            <div>
-                <h1 className="text-2xl font-bold tracking-tight text-gray-900">BizScout Monitor</h1>
-                <p className="text-gray-500 text-sm">Real-time API Observability</p>
-            </div>
+          <div>
+              <h1 className="text-2xl font-bold tracking-tight text-gray-900">Dashboard</h1>
+              <p className="text-gray-500 text-sm">Real-time system observability</p>
           </div>
           
           <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-full border border-gray-200 shadow-sm text-sm">
@@ -52,9 +50,6 @@ const Dashboard = () => {
             {connectionStatus === 'connected' && <Radio size={14} className="text-green-600 ml-1" />}
           </div>
         </div>
-
-        {/* Phase 4: AI Insights Placeholder */}
-        <SystemInsights />
 
         {/* Filters & Stats */}
         <div className="grid grid-cols-1 gap-4">
@@ -90,29 +85,47 @@ const Dashboard = () => {
             </div>
 
             {/* Stats */}
-            <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
-                <div className="text-gray-500 text-xs uppercase font-bold tracking-wider mb-1">Total Requests</div>
-                <div className="text-2xl font-bold text-gray-800">{logs.length}</div>
-             </div>
-             <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
-                <div className="text-gray-500 text-xs uppercase font-bold tracking-wider mb-1">Avg Latency</div>
-                <div className="text-2xl font-bold text-gray-800">
-                    {logs.length > 0 ? Math.round(logs.reduce((acc, log) => acc + log.latencyMs, 0) / logs.length) : 0} <span className="text-sm font-normal text-gray-400">ms</span>
-                </div>
-             </div>
-             <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
-                <div className="text-gray-500 text-xs uppercase font-bold tracking-wider mb-1">Success Rate</div>
-                <div className="text-2xl font-bold text-gray-800">
-                    {logs.length > 0 ? Math.round((logs.filter(l => l.status < 400).length / logs.length) * 100) : 0}<span className="text-sm font-normal text-gray-400">%</span>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
+                    <div className="text-gray-500 text-xs uppercase font-bold tracking-wider mb-1">Total Logs</div>
+                    <div className="text-2xl font-bold text-gray-800">{totalLogs}</div>
+                 </div>
+                 <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
+                    <div className="text-gray-500 text-xs uppercase font-bold tracking-wider mb-1">Avg Latency</div>
+                    <div className="text-2xl font-bold text-gray-800">
+                        {logs.length > 0 ? Math.round(logs.reduce((acc, log) => acc + log.latencyMs, 0) / logs.length) : 0} <span className="text-sm font-normal text-gray-400">ms</span>
+                    </div>
+                 </div>
+                 <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
+                    <div className="text-gray-500 text-xs uppercase font-bold tracking-wider mb-1">Success Rate</div>
+                    <div className="text-2xl font-bold text-gray-800">
+                        {logs.length > 0 ? Math.round((logs.filter(l => l.status < 400).length / logs.length) * 100) : 0}<span className="text-sm font-normal text-gray-400">%</span>
+                    </div>
+                 </div>
              </div>
         </div>
 
         {/* Logs Table */}
         <div>
             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-800">Latest Logs</h3>
-                <span className="text-xs text-gray-400 font-mono hidden md:inline">httpbin.org/anything</span>
+                <h3 className="text-lg font-bold text-gray-800">System Logs</h3>
+                <div className="flex items-center gap-2">
+                    <button 
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                        className="p-1 px-3 border rounded text-sm disabled:opacity-50 hover:bg-gray-50"
+                    >
+                        <ChevronLeft size={16} className="inline" /> Prev
+                    </button>
+                    <span className="text-sm text-gray-600">Page {page} of {totalPages || 1}</span>
+                    <button 
+                        onClick={() => setPage(p => Math.min(totalPages || 1, p + 1))}
+                        disabled={page >= (totalPages || 1)}
+                        className="p-1 px-3 border rounded text-sm disabled:opacity-50 hover:bg-gray-50"
+                    >
+                         Next <ChevronRight size={16} className="inline" />
+                    </button>
+                </div>
             </div>
             <LogTable logs={logs} onViewDetails={setSelectedLog} />
         </div>

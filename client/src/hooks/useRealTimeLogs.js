@@ -1,22 +1,30 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const useRealTimeLogs = (filters) => {
+const useRealTimeLogs = (filters, page = 1) => {
     const [logs, setLogs] = useState([]);
     const [connectionStatus, setConnectionStatus] = useState('connecting');
+    const [totalLogs, setTotalLogs] = useState(0);
 
     useEffect(() => {
-        // 1. Fetch initial logs (with filters)
+        // 1. Fetch initial logs (with filters and page)
         const fetchHistory = async () => {
             try {
-                const params = new URLSearchParams({ limit: 50 });
+                const params = new URLSearchParams({ limit: 50, page: page });
                 if (filters?.startDate) params.append('startDate', filters.startDate);
                 if (filters?.endDate) params.append('endDate', filters.endDate);
                 if (filters?.status) params.append('status', filters.status);
 
                 const response = await axios.get(`http://localhost:3000/api/logs?${params.toString()}`);
-                // Support both old array format and new paginated format
-                setLogs(Array.isArray(response.data) ? response.data : response.data.data);
+
+                if (response.data.pagination) {
+                    setLogs(response.data.data);
+                    setTotalLogs(response.data.pagination.total);
+                } else {
+                    // Fallback for array response
+                    setLogs(response.data);
+                    setTotalLogs(response.data.length);
+                }
             } catch (err) {
                 console.error('Failed to fetch initial logs:', err);
             }
@@ -52,9 +60,9 @@ const useRealTimeLogs = (filters) => {
             eventSource.close();
             setConnectionStatus('disconnected');
         };
-    }, [filters?.startDate, filters?.endDate, filters?.status]); // Re-run when filters change
+    }, [filters?.startDate, filters?.endDate, filters?.status, page]); // Re-run when filters or page change
 
-    return { logs, connectionStatus };
+    return { logs, connectionStatus, totalLogs };
 };
 
 export default useRealTimeLogs;

@@ -45,7 +45,7 @@ const aiService = {
         }
 
         try {
-            const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
             const fullPrompt = `${systemContext}\n\nUser: ${prompt}`;
             const result = await model.generateContent(fullPrompt);
             const response = await result.response;
@@ -68,7 +68,7 @@ const aiService = {
 
         } catch (error) {
             console.error('[AI] Gemini Error:', error);
-            throw new Error('Failed to generate AI response');
+            throw new Error(`Failed to generate AI response: ${error.message}`);
         }
     },
 
