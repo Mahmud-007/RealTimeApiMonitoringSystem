@@ -71,6 +71,69 @@ const logController = {
         });
     },
 
+    // Get Overall Statistics (independent of pagination)
+    getStats: async (req, res) => {
+        try {
+            const { startDate, endDate, status } = req.query;
+            let query = {};
+
+            // Apply same filters as getLogs
+            if (startDate || endDate) {
+                query.timestamp = {};
+                if (startDate) query.timestamp.$gte = new Date(startDate);
+                if (endDate) query.timestamp.$lte = new Date(endDate);
+            }
+
+            if (status) {
+                if (status === 'error') {
+                    query.status = { $gte: 400 };
+                } else if (status === 'success') {
+                    query.status = { $lt: 400 };
+                } else {
+                    query.status = parseInt(status);
+                }
+            }
+
+            // Calculate statistics using aggregation
+            const stats = await Log.aggregate([
+                { $match: query },
+                {
+                    $group: {
+                        _id: null,
+                        totalLogs: { $sum: 1 },
+                        avgLatency: { $avg: '$latencyMs' },
+                        successCount: {
+                            $sum: {
+                                $cond: [{ $lt: ['$status', 400] }, 1, 0]
+                            }
+                        }
+                    }
+                }
+            ]);
+
+            if (stats.length === 0) {
+                return res.json({
+                    totalLogs: 0,
+                    avgLatency: 0,
+                    successRate: 0
+                });
+            }
+
+            const result = stats[0];
+            res.json({
+                totalLogs: result.totalLogs,
+                avgLatency: Math.round(result.avgLatency || 0),
+                successRate: result.totalLogs > 0
+                    ? Math.round((result.successCount / result.totalLogs) * 100)
+                    : 0
+            });
+
+        } catch (err) {
+            console.error('Error fetching stats:', err);
+            res.status(500).json({ error: 'Failed to fetch stats' });
+        }
+    },
+
     // Manual Trigger Endpoint
     triggerPing: async (req, res) => {
         pingEndpoint();

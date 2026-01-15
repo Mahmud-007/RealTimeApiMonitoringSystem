@@ -5,6 +5,9 @@ const logController = require('../controllers/logController');
 // Get logs (with pagination/filters)
 router.get('/logs', logController.getLogs);
 
+// Get overall statistics
+router.get('/stats', logController.getStats);
+
 // Real-time events
 router.get('/events', logController.subscribeEvents);
 
