@@ -1,6 +1,7 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const AICache = require('../models/AICache');
 const Incident = require('../models/Incident');
+const Log = require('../models/Log');
 
 // Rate Limiting Config
 const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
@@ -46,14 +47,125 @@ const aiService = {
 
         try {
             const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
-            const fullPrompt = `${systemContext}\n\nUser: ${prompt}`;
-            const result = await model.generateContent(fullPrompt);
+
+            // 1. Intent Analysis & Query Generation
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+            const queryPrompt = `You are a MongoDB Query Generator for a log monitoring system.
+
+Database Schema:
+- Collection: 'logs'
+- Fields:
+  * timestamp (Date) - when the request occurred
+  * status (Number) - HTTP status code (200, 404, 500, etc.)
+  * latencyMs (Number) - response time in milliseconds
+  * method (String) - HTTP method
+  * requestPayload (Object)
+
+CRITICAL RULES:
+1. ALWAYS generate a query if the user asks about logs, errors, performance, issues, or system data
+2. For "today": use timestamp >= "${today.toISOString()}"
+3. For "last 24 hours": use timestamp >= "${last24h.toISOString()}"
+4. For "issues" or "errors": query status >= 400
+5. For "slow" or "performance": sort by latencyMs descending
+6. Output ONLY valid JSON: { "type": "find", "query": {...}, "sort": {...}, "limit": N }
+7. Default limit: 10. Max limit: 20
+8. Return null ONLY for greetings like "hello" or "hi"
+
+Examples:
+- "Summarize issues in last 24 hours" → { "type": "find", "query": { "timestamp": { "$gte": "${last24h.toISOString()}" }, "status": { "$gte": 400 } }, "sort": { "timestamp": -1 }, "limit": 20 }
+- "Slowest response times today" → { "type": "find", "query": { "timestamp": { "$gte": "${today.toISOString()}" } }, "sort": { "latencyMs": -1 }, "limit": 10 }
+- "What errors occurred?" → { "type": "find", "query": { "status": { "$gte": 400 } }, "sort": { "timestamp": -1 }, "limit": 10 }
+
+User Question: "${prompt}"
+
+Generate the MongoDB query now:`;
+
+            const queryResult = await model.generateContent(queryPrompt);
+            const queryText = await queryResult.response.text();
+            let dbData = null;
+            let dbQuery = null;
+
+            try {
+                const jsonStr = queryText.replace(/```json/g, '').replace(/```/g, '').trim();
+                dbQuery = JSON.parse(jsonStr);
+
+                if (dbQuery && dbQuery.type === 'find') {
+                    console.log('[AI] Executing Generated Query:', JSON.stringify(dbQuery));
+
+                    let query = dbQuery.query || {};
+                    const sort = dbQuery.sort || { timestamp: -1 };
+                    const limit = Math.min(dbQuery.limit || 10, 20);
+
+                    // Convert ISO string dates to Date objects
+                    if (query.timestamp && typeof query.timestamp === 'object') {
+                        if (query.timestamp.$gte && typeof query.timestamp.$gte === 'string') {
+                            query.timestamp.$gte = new Date(query.timestamp.$gte);
+                        }
+                        if (query.timestamp.$lte && typeof query.timestamp.$lte === 'string') {
+                            query.timestamp.$lte = new Date(query.timestamp.$lte);
+                        }
+                    }
+
+                    dbData = await Log.find(query).sort(sort).limit(limit).lean();
+                    console.log(`[AI] Found ${dbData.length} records`);
+                }
+            } catch (e) {
+                console.warn('[AI] Failed to parse/execute query:', e.message);
+                // Continue as normal chat
+            }
+
+            // 2. Final Response Generation
+            let finalPrompt = '';
+
+            if (dbData && dbData.length > 0) {
+                // Summarize data for better context
+                const summary = {
+                    totalRecords: dbData.length,
+                    statusCodes: [...new Set(dbData.map(d => d.status))],
+                    avgLatency: Math.round(dbData.reduce((sum, d) => sum + d.latencyMs, 0) / dbData.length),
+                    errorCount: dbData.filter(d => d.status >= 400).length
+                };
+
+                finalPrompt = `You are a monitoring system assistant. Answer the user's question based on ACTUAL DATA from the database.
+
+User Question: "${prompt}"
+
+DATABASE RESULTS (${dbData.length} records found):
+Summary: ${JSON.stringify(summary)}
+Sample Records: ${JSON.stringify(dbData.slice(0, 5))}
+
+INSTRUCTIONS:
+- Provide a DIRECT answer with specific numbers and timestamps
+- Cite actual data points (e.g., "At 10:23 AM, status 500 with 2500ms latency")
+- If asked about issues, list them with details
+- If asked about performance, mention specific latency values
+- Be concise and actionable
+- DO NOT ask for clarification - answer based on the data provided`;
+            } else if (dbQuery) {
+                finalPrompt = `You are a monitoring system assistant.
+
+User Question: "${prompt}"
+
+I searched the database but found NO matching records for this query.
+
+Respond by:
+1. Confirming no data was found
+2. Suggesting the system might be healthy or the time range might be different
+3. Keep it brief and positive`;
+            } else {
+                finalPrompt = `${systemContext}\n\nUser: ${prompt}`;
+            }
+
+            const result = await model.generateContent(finalPrompt);
             const response = await result.response;
             const responseText = response.text();
 
             callCount++;
 
-            const inputTokens = fullPrompt.length / 4;
+            const inputTokens = finalPrompt.length / 4;
             const outputTokens = responseText.length / 4;
 
             await AICache.create({
