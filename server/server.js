@@ -111,7 +111,8 @@ const path = require('path');
 app.use(express.static(path.join(__dirname, '../client/dist')));
 
 // Handle React routing, return all requests to React app
-app.get('*', (req, res) => {
+// Match any path that doesn't start with /api using Regex
+app.get(/^(?!\/api).+/, (req, res) => {
     res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
 
