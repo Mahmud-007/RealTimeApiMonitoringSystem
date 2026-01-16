@@ -26,7 +26,7 @@ const useRealTimeLogs = (filters, page = 1) => {
                 if (filters?.endDate) params.append('endDate', filters.endDate);
                 if (filters?.status) params.append('status', filters.status);
 
-                const response = await axios.get(`http://localhost:3000/api/logs?${params.toString()}`);
+                const response = await axios.get(`/api/logs?${params.toString()}`);
 
                 if (response.data.pagination) {
                     setLogs(response.data.data);
@@ -49,7 +49,7 @@ const useRealTimeLogs = (filters, page = 1) => {
                 if (filters?.endDate) params.append('endDate', filters.endDate);
                 if (filters?.status) params.append('status', filters.status);
 
-                const response = await axios.get(`http://localhost:3000/api/stats?${params.toString()}`);
+                const response = await axios.get(`/api/stats?${params.toString()}`);
                 setStats(response.data);
             } catch (err) {
                 console.error('Failed to fetch stats:', err);
@@ -59,7 +59,7 @@ const useRealTimeLogs = (filters, page = 1) => {
         // 3. Fetch AI statistics
         const fetchAIStats = async () => {
             try {
-                const response = await axios.get('http://localhost:3000/api/ai/stats');
+                const response = await axios.get('/api/ai/stats');
                 setAiStats(response.data);
             } catch (err) {
                 console.error('Failed to fetch AI stats:', err);
@@ -71,7 +71,10 @@ const useRealTimeLogs = (filters, page = 1) => {
         fetchAIStats();
 
         // 3. Connect to SSE
-        const eventSource = new EventSource('http://localhost:3000/api/events');
+        const sseUrl = window.location.hostname === 'localhost'
+            ? 'http://localhost:3000/api/events'
+            : '/api/events';
+        const eventSource = new EventSource(sseUrl);
 
         eventSource.onopen = () => {
             setConnectionStatus('connected');

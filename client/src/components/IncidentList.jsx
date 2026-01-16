@@ -7,7 +7,7 @@ const IncidentList = () => {
 
     const fetchIncidents = async () => {
         try {
-            const res = await fetch('http://localhost:3000/api/ai/incidents');
+            const res = await fetch('/api/ai/incidents');
             const data = await res.json();
             if (Array.isArray(data)) {
                 setIncidents(data);
@@ -36,7 +36,7 @@ const IncidentList = () => {
 
     return (
         <div className="h-[600px] flex flex-col bg-white rounded-lg border border-gray-200 shadow-sm">
-             <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+            <div className="p-4 border-b border-gray-100 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <AlertTriangle className="text-amber-500" size={20} />
                     <h3 className="font-bold text-gray-800">Detected Incidents</h3>
@@ -48,9 +48,8 @@ const IncidentList = () => {
                 {incidents.map(incident => (
                     <div key={incident._id} className="p-4 hover:bg-gray-50 transition-colors">
                         <div className="flex justify-between items-start mb-1">
-                            <span className={`text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm ${
-                                incident.severity === 'high' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
-                            }`}>
+                            <span className={`text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm ${incident.severity === 'high' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+                                }`}>
                                 {incident.type}
                             </span>
                             <span className="text-xs text-gray-400 flex items-center gap-1">
@@ -59,7 +58,7 @@ const IncidentList = () => {
                             </span>
                         </div>
                         <p className="font-medium text-gray-800 text-sm mb-2">{incident.description}</p>
-                        
+
                         {incident.rootCauseAnalysis && (
                             <div className="bg-indigo-50/50 border border-indigo-100 rounded-md p-3 text-sm space-y-2">
                                 <div>
@@ -67,18 +66,18 @@ const IncidentList = () => {
                                     <p className="text-gray-600 mt-0.5">{incident.rootCauseAnalysis}</p>
                                 </div>
                                 {incident.suggestedFix && (
-                                     <div>
+                                    <div>
                                         <span className="text-xs font-bold text-emerald-600 uppercase">Suggested Fix</span>
                                         <p className="text-gray-600 mt-0.5">{incident.suggestedFix}</p>
                                     </div>
                                 )}
                             </div>
                         )}
-                        
+
                         {!incident.rootCauseAnalysis && (
-                             <div className="text-xs text-gray-400 italic mt-2 animate-pulse">
+                            <div className="text-xs text-gray-400 italic mt-2 animate-pulse">
                                 AI is analyzing...
-                             </div>
+                            </div>
                         )}
                     </div>
                 ))}

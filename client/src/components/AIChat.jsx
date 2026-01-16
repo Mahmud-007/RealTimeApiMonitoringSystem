@@ -27,13 +27,13 @@ const AIChat = () => {
         setIsLoading(true);
 
         try {
-            const response = await fetch('http://localhost:3000/api/ai/chat', {
+            const response = await fetch('/api/ai/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt: input })
             });
             const data = await response.json();
-            
+
             if (response.ok) {
                 setMessages(prev => [...prev, { role: 'assistant', content: data.text }]);
             } else {
@@ -53,7 +53,7 @@ const AIChat = () => {
                 <Bot className="text-indigo-600" size={20} />
                 <h3 className="font-bold text-gray-800">AI Assistant</h3>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50">
                 {messages.map((msg, idx) => (
                     <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
@@ -68,7 +68,7 @@ const AIChat = () => {
                 {isLoading && (
                     <div className="flex gap-3">
                         <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center shrink-0">
-                             <Bot size={16} className="text-white" />
+                            <Bot size={16} className="text-white" />
                         </div>
                         <div className="p-3 rounded-lg bg-white border border-gray-200 text-gray-700 shadow-sm flex items-center">
                             <Loader2 size={16} className="animate-spin text-gray-400" />
@@ -87,8 +87,8 @@ const AIChat = () => {
                     className="flex-1 text-sm border-gray-200 rounded-md focus:border-indigo-500 focus:ring-indigo-500"
                     disabled={isLoading}
                 />
-                <button 
-                    type="submit" 
+                <button
+                    type="submit"
                     disabled={isLoading || !input.trim()}
                     className="p-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
