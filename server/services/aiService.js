@@ -276,4 +276,4 @@ Respond by:
     }
 };
 
-module.exports = aiService;
+module.exports = { ...aiService, estimateCost };
