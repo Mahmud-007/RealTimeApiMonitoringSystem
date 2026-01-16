@@ -38,16 +38,16 @@ const Dashboard = () => {
                 {/* Header */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Dashboard</h1>
-                        <p className="text-gray-500 text-sm">Real-time system observability</p>
+                        <h1 className="text-2xl font-black tracking-tight text-biz-dark uppercase">System Monitor</h1>
+                        <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">Real-time observability hub</p>
                     </div>
 
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-full border border-gray-200 shadow-sm text-sm">
-                        <div className={`w-2.5 h-2.5 rounded-full ${connectionStatus === 'connected' ? 'bg-green-500 animate-pulse' : 'bg-amber-500'}`} />
-                        <span className="font-medium text-gray-600 capitalize">
-                            {connectionStatus === 'connected' ? 'Live Stream' : connectionStatus}
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-biz-dark rounded-full border border-biz-yellow/20 shadow-sm text-xs">
+                        <div className={`w-2 h-2 rounded-full ${connectionStatus === 'connected' ? 'bg-biz-yellow animate-pulse' : 'bg-red-500'}`} />
+                        <span className="font-bold text-biz-yellow uppercase tracking-tight">
+                            {connectionStatus === 'connected' ? <><span style="color: #22c55e; margin-left: 8px; font-size: 1.2em;">Live Data Feed </span></> : connectionStatus}
                         </span>
-                        {connectionStatus === 'connected' && <Radio size={14} className="text-green-600 ml-1" />}
+                        {connectionStatus === 'connected' && <Radio size={12} className="text-biz-yellow ml-1" />}
                     </div>
                 </div>
 
@@ -59,7 +59,7 @@ const Dashboard = () => {
                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Start Date</label>
                             <input
                                 type="datetime-local"
-                                className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="w-full text-sm border-gray-200 rounded-md shadow-sm focus:border-brand-yellow focus:ring-brand-yellow outline-none transition-all"
                                 onChange={(e) => handleFilterChange('startDate', e.target.value)}
                             />
                         </div>
@@ -67,14 +67,14 @@ const Dashboard = () => {
                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">End Date</label>
                             <input
                                 type="datetime-local"
-                                className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="w-full text-sm border-gray-200 rounded-md shadow-sm focus:border-brand-yellow focus:ring-brand-yellow outline-none transition-all"
                                 onChange={(e) => handleFilterChange('endDate', e.target.value)}
                             />
                         </div>
                         <div className="w-full md:w-auto flex-1">
                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
                             <select
-                                className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="w-full text-sm border-gray-200 rounded-md shadow-sm focus:border-biz-yellow focus:ring-biz-yellow outline-none transition-all"
                                 onChange={(e) => handleFilterChange('status', e.target.value)}
                             >
                                 <option value="">All Statuses</option>
@@ -100,16 +100,6 @@ const Dashboard = () => {
                             <div className="text-gray-500 text-xs uppercase font-bold tracking-wider mb-1">Success Rate</div>
                             <div className="text-2xl font-bold text-gray-800">
                                 {stats.successRate}<span className="text-sm font-normal text-gray-400">%</span>
-                            </div>
-                        </div>
-                        <div className="bg-white p-4 rounded-lg border border-indigo-100 shadow-sm bg-indigo-50/20">
-                            <div className="text-indigo-600 text-xs uppercase font-bold tracking-wider mb-1">Estimated AI Cost</div>
-                            <div className="text-2xl font-bold text-indigo-700">
-                                <span className="text-sm font-normal mr-1">$</span>{aiStats.totalCost}
-                            </div>
-                            <div className="flex gap-4 mt-1 text-[10px] text-indigo-400 font-medium">
-                                <span>In: {aiStats.totalInputTokens.toLocaleString()}</span>
-                                <span>Out: {aiStats.totalOutputTokens.toLocaleString()}</span>
                             </div>
                         </div>
                     </div>

@@ -71,7 +71,7 @@ const useRealTimeLogs = (filters, page = 1) => {
         fetchAIStats();
 
         // 3. Connect to SSE
-        const eventSource = new EventSource('/api/events');
+        const eventSource = new EventSource('api/events');
 
         eventSource.onopen = () => {
             setConnectionStatus('connected');
