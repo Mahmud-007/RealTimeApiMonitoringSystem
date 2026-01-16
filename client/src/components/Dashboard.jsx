@@ -12,7 +12,7 @@ const Dashboard = () => {
         status: ''
     });
 
-    const { logs, connectionStatus, totalLogs, stats } = useRealTimeLogs(filters, page);
+    const { logs, connectionStatus, totalLogs, stats, aiStats } = useRealTimeLogs(filters, page);
     const [selectedLog, setSelectedLog] = useState(null);
 
     // Close modal on escape
@@ -100,6 +100,16 @@ const Dashboard = () => {
                             <div className="text-gray-500 text-xs uppercase font-bold tracking-wider mb-1">Success Rate</div>
                             <div className="text-2xl font-bold text-gray-800">
                                 {stats.successRate}<span className="text-sm font-normal text-gray-400">%</span>
+                            </div>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg border border-indigo-100 shadow-sm bg-indigo-50/20">
+                            <div className="text-indigo-600 text-xs uppercase font-bold tracking-wider mb-1">Estimated AI Cost</div>
+                            <div className="text-2xl font-bold text-indigo-700">
+                                <span className="text-sm font-normal mr-1">$</span>{aiStats.totalCost}
+                            </div>
+                            <div className="flex gap-4 mt-1 text-[10px] text-indigo-400 font-medium">
+                                <span>In: {aiStats.totalInputTokens.toLocaleString()}</span>
+                                <span>Out: {aiStats.totalOutputTokens.toLocaleString()}</span>
                             </div>
                         </div>
                     </div>

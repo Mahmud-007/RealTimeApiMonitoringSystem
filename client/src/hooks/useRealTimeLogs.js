@@ -10,6 +10,12 @@ const useRealTimeLogs = (filters, page = 1) => {
         avgLatency: 0,
         successRate: 0
     });
+    const [aiStats, setAiStats] = useState({
+        totalInputTokens: 0,
+        totalOutputTokens: 0,
+        totalCost: 0,
+        totalRequests: 0
+    });
 
     useEffect(() => {
         // 1. Fetch initial logs (with filters and page)
@@ -50,8 +56,19 @@ const useRealTimeLogs = (filters, page = 1) => {
             }
         };
 
+        // 3. Fetch AI statistics
+        const fetchAIStats = async () => {
+            try {
+                const response = await axios.get('/api/ai/stats');
+                setAiStats(response.data);
+            } catch (err) {
+                console.error('Failed to fetch AI stats:', err);
+            }
+        };
+
         fetchHistory();
         fetchStats();
+        fetchAIStats();
 
         // 3. Connect to SSE
         const eventSource = new EventSource('/api/events');
@@ -66,6 +83,7 @@ const useRealTimeLogs = (filters, page = 1) => {
                 setLogs((prevLogs) => [newLog, ...prevLogs]);
                 // Refresh stats when new log arrives
                 fetchStats();
+                fetchAIStats();
             } catch (error) {
                 console.error('Error parsing SSE data:', error);
             }
@@ -82,7 +100,7 @@ const useRealTimeLogs = (filters, page = 1) => {
         };
     }, [filters?.startDate, filters?.endDate, filters?.status, page]);
 
-    return { logs, connectionStatus, totalLogs, stats };
+    return { logs, connectionStatus, totalLogs, stats, aiStats };
 };
 
 export default useRealTimeLogs;

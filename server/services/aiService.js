@@ -1,5 +1,6 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const AICache = require('../models/AICache');
+const AIUsage = require('../models/AIUsage');
 const Incident = require('../models/Incident');
 const Log = require('../models/Log');
 
@@ -22,7 +23,12 @@ const checkRateLimit = () => {
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'dummy-key');
 
 const estimateCost = (inputTokens, outputTokens) => {
-    return 0;
+    // Gemini 1.5 Flash Pricing (approximate)
+    // Input: $0.075 / 1M tokens
+    // Output: $0.30 / 1M tokens
+    const inputCost = (inputTokens / 1000000) * 0.075;
+    const outputCost = (outputTokens / 1000000) * 0.30;
+    return parseFloat((inputCost + outputCost).toFixed(6));
 };
 
 const aiService = {
@@ -160,23 +166,51 @@ Respond by:
             }
 
             const result = await model.generateContent(finalPrompt);
-            const response = await result.response;
-            const responseText = response.text();
+            const finalResponse = await result.response;
+            const responseText = finalResponse.text();
 
             callCount++;
 
-            const inputTokens = finalPrompt.length / 4;
-            const outputTokens = responseText.length / 4;
+            // Accurate Token Counting
+            let totalInputTokens = 0;
+            let totalOutputTokens = 0;
+
+            try {
+                // Count tokens for the prompts
+                const countResult1 = await model.countTokens(queryPrompt);
+                const countResult2 = await model.countTokens(finalPrompt);
+                totalInputTokens = countResult1.totalTokens + countResult2.totalTokens;
+
+                // For output, we use the usage metadata if available, otherwise estimate
+                if (finalResponse.usageMetadata) {
+                    totalOutputTokens = finalResponse.usageMetadata.candidatesTokenCount || (responseText.length / 4);
+                } else {
+                    totalOutputTokens = responseText.length / 4;
+                }
+            } catch (te) {
+                console.warn('[AI] Token counting failed, falling back to estimation', te);
+                totalInputTokens = (queryPrompt.length + finalPrompt.length) / 4;
+                totalOutputTokens = responseText.length / 4;
+            }
+
+            const cost = estimateCost(totalInputTokens, totalOutputTokens);
 
             await AICache.create({
                 promptHash,
                 originalQuery: prompt.substring(0, 200),
                 response: responseText,
-                tokensUsed: Math.ceil(inputTokens + outputTokens),
-                costUSD: estimateCost()
+                inputTokens: Math.ceil(totalInputTokens),
+                outputTokens: Math.ceil(totalOutputTokens)
             });
 
-            return { text: responseText, cached: false, cost: 0 };
+            // Persistent Usage Tracking
+            await AIUsage.create({
+                inputTokens: Math.ceil(totalInputTokens),
+                outputTokens: Math.ceil(totalOutputTokens),
+                type: systemContext.includes('Reliability') ? 'incident_analysis' : 'chat'
+            });
+
+            return { text: responseText, cached: false, inputTokens: totalInputTokens, outputTokens: totalOutputTokens, cost };
 
         } catch (error) {
             console.error('[AI] Gemini Error:', error);

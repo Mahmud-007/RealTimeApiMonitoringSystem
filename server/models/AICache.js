@@ -12,8 +12,14 @@ const AICacheSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    tokensUsed: Number,
-    costUSD: Number,
+    inputTokens: {
+        type: Number,
+        default: 0
+    },
+    outputTokens: {
+        type: Number,
+        default: 0
+    },
     createdAt: {
         type: Date,
         default: Date.now,
