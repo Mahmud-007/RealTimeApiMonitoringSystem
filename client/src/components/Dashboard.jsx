@@ -45,9 +45,13 @@ const Dashboard = () => {
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-biz-dark rounded-full border border-biz-yellow/20 shadow-sm text-xs">
                         <div className={`w-2 h-2 rounded-full ${connectionStatus === 'connected' ? 'bg-biz-yellow animate-pulse' : 'bg-red-500'}`} />
                         <span className="font-bold text-biz-yellow uppercase tracking-tight">
-                            {connectionStatus === 'connected' ? <><span style="color: #22c55e; margin-left: 8px; font-size: 1.2em;">Live Data Feed </span></> : connectionStatus}
+                            {connectionStatus === 'connected' ? (
+                                <span style={{ marginLeft: '8px', fontSize: '1.2em' }}>
+                                    Live Data Feed
+                                </span>
+                            ) : connectionStatus}
                         </span>
-                        {connectionStatus === 'connected' && <Radio size={12} className="text-biz-yellow ml-1" />}
+                        {connectionStatus === 'connected' && <Radio size={12} style={{ color: '#22c55e' }} className="text-biz-yellow ml-1" />}
                     </div>
                 </div>
 

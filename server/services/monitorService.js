@@ -63,7 +63,7 @@ const pingEndpoint = async () => {
 const startMonitoring = () => {
     console.log('[Monitor] Starting monitoring service...');
     // Schedule task to run every 5 minutes
-    cron.schedule('*/5 * * * *', () => {
+    cron.schedule('*/10 * * * * *', () => {
         console.log('[Monitor] Triggering scheduled ping...');
         pingEndpoint();
     });

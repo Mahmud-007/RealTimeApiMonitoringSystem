@@ -7,7 +7,7 @@ const IncidentList = () => {
 
     const fetchIncidents = async () => {
         try {
-            const res = await fetch('/api/ai/incidents');
+            const res = await fetch('http://localhost:3000/api/ai/incidents');
             const data = await res.json();
             if (Array.isArray(data)) {
                 setIncidents(data);
