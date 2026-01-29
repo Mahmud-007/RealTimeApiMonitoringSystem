@@ -55,6 +55,7 @@ const pingEndpoint = async () => {
         const savedLog = await newLog.save();
         console.log(`[Monitor] Ping successful: ${status} in ${latencyMs}ms`);
         eventBus.emit('new-log', savedLog);
+        detectAnomalies(savedLog);
     } catch (dbError) {
         console.error('[Monitor] Failed to save log:', dbError);
     }
